@@ -1,6 +1,6 @@
 {
   "name": "react-foam",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Extremely lightweight, performant, and intuitive React state management library",
   "main": "dist/index.js",
   "type": "module",

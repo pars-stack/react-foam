@@ -1,22 +1,21 @@
-import { renderHook, act } from "@testing-library/react";
-import { createStore, computed, batch } from "./index";
+import { renderHook, act } from '@testing-library/react';
+import { createStore, computed, batch } from './index';
 
-describe("React Foam", () => {
-  describe("createStore", () => {
-    it("should create a store with initial state", () => {
+describe('React Foam', () => {
+  describe('createStore', () => {
+    it('should create a store with initial state', () => {
       const useStore = createStore({ count: 0 });
       const { result } = renderHook(() => useStore());
-      console.log("result", result);
       expect(result.current).toEqual({ count: 0 });
     });
 
-    it("should provide getState method", () => {
+    it('should provide getState method', () => {
       const useStore = createStore({ count: 5 });
 
       expect(useStore.getState()).toEqual({ count: 5 });
     });
 
-    it("should provide setState method", () => {
+    it('should provide setState method', () => {
       const useStore = createStore({ count: 0 });
 
       act(() => {
@@ -155,7 +154,7 @@ describe("React Foam", () => {
     });
   });
 
-  describe("multiple stores", () => {
+  describe('multiple stores', () => {
     it('should handle multiple independent stores', () => {
       const useStore1 = createStore({ value: 1 });
       const useStore2 = createStore({ value: 2 });
@@ -174,8 +173,8 @@ describe("React Foam", () => {
       expect(result2.current.value).toBe(2); // Unchanged
     });
 
-    it("should allow cross-store interactions", () => {
-      const useUserStore = createStore({ name: "", isLoggedIn: false });
+    it('should allow cross-store interactions', () => {
+      const useUserStore = createStore({ name: '', isLoggedIn: false });
       const useCartStore = createStore({ items: [] as string[] });
 
       const performCheckout = () => {
@@ -183,11 +182,11 @@ describe("React Foam", () => {
         const cart = useCartStore.getState();
 
         if (!user.isLoggedIn) {
-          throw new Error("User must be logged in");
+          throw new Error('User must be logged in');
         }
 
         if (cart.items.length === 0) {
-          throw new Error("Cart is empty");
+          throw new Error('Cart is empty');
         }
 
         // Simulate checkout
@@ -196,8 +195,8 @@ describe("React Foam", () => {
 
       // Setup initial state
       act(() => {
-        useUserStore.setState({ name: "John", isLoggedIn: true });
-        useCartStore.setState({ items: ["item1", "item2"] });
+        useUserStore.setState({ name: 'John', isLoggedIn: true });
+        useCartStore.setState({ items: ['item1', 'item2'] });
       });
 
       expect(() => performCheckout()).not.toThrow();
@@ -205,8 +204,8 @@ describe("React Foam", () => {
     });
   });
 
-  describe("computed values", () => {
-    it("should create computed values", () => {
+  describe('computed values', () => {
+    it('should create computed values', () => {
       const useStore = createStore({ items: [1, 2, 3, 4, 5] });
       const getSum = computed(useStore, (state) =>
         state.items.reduce((sum, item) => sum + item, 0)
@@ -221,26 +220,26 @@ describe("React Foam", () => {
       expect(getSum()).toBe(6);
     });
 
-    it("should work with complex computed values", () => {
+    it('should work with complex computed values', () => {
       interface TodoState {
         todos: { id: number; text: string; completed: boolean }[];
-        filter: "all" | "active" | "completed";
+        filter: 'all' | 'active' | 'completed';
       }
 
       const useStore = createStore<TodoState>({
         todos: [
-          { id: 1, text: "Task 1", completed: false },
-          { id: 2, text: "Task 2", completed: true },
-          { id: 3, text: "Task 3", completed: false },
+          { id: 1, text: 'Task 1', completed: false },
+          { id: 2, text: 'Task 2', completed: true },
+          { id: 3, text: 'Task 3', completed: false },
         ],
-        filter: "all",
+        filter: 'all',
       });
 
       const getFilteredTodos = computed(useStore, (state) => {
         switch (state.filter) {
-          case "active":
+          case 'active':
             return state.todos.filter((todo) => !todo.completed);
-          case "completed":
+          case 'completed':
             return state.todos.filter((todo) => todo.completed);
           default:
             return state.todos;
@@ -250,13 +249,13 @@ describe("React Foam", () => {
       expect(getFilteredTodos()).toHaveLength(3);
 
       act(() => {
-        useStore.setState((state) => ({ ...state, filter: "active" }));
+        useStore.setState((state) => ({ ...state, filter: 'active' }));
       });
 
       expect(getFilteredTodos()).toHaveLength(2);
 
       act(() => {
-        useStore.setState((state) => ({ ...state, filter: "completed" }));
+        useStore.setState((state) => ({ ...state, filter: 'completed' }));
       });
 
       expect(getFilteredTodos()).toHaveLength(1);
@@ -299,23 +298,23 @@ describe("React Foam", () => {
     });
   });
 
-  describe("error handling", () => {
-    it("should handle errors in state updates gracefully", () => {
+  describe('error handling', () => {
+    it('should handle errors in state updates gracefully', () => {
       const useStore = createStore({ count: 0 });
 
       expect(() => {
         act(() => {
           useStore.setState(() => {
-            throw new Error("Update error");
+            throw new Error('Update error');
           });
         });
-      }).toThrow("Update error");
+      }).toThrow('Update error');
 
       // State should remain unchanged
       expect(useStore.getState()).toEqual({ count: 0 });
     });
 
-    it("should handle errors in selectors gracefully", () => {
+    it('should handle errors in selectors gracefully', () => {
       const useStore = createStore({ value: null as any });
 
       expect(() => {
@@ -351,7 +350,7 @@ describe("React Foam", () => {
   });
 
   describe('memory management', () => {
-    it("should clean up listeners on unmount", () => {
+    it('should clean up listeners on unmount', () => {
       const useStore = createStore({ count: 0 });
       const { unmount, rerender } = renderHook(() => useStore());
 
