@@ -44,7 +44,7 @@ This project and everyone participating in it is governed by our Code of Conduct
    ```
 3. Add the upstream repository:
    ```bash
-   git remote add upstream https://github.com/react-foam/react-foam.git
+   git remote add upstream https://github.com/pars-stack/react-foam.git
    ```
 
 ## Development Setup

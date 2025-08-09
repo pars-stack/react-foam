@@ -862,7 +862,5 @@ React Foam was inspired by the simplicity of Zustand, the power of Redux, and th
 
 ---
 
-**Built with ❤️ by the React Foam team**
-
-For more information, visit our [website](https://react-foam.dev) or join our [Discord community](https://discord.gg/react-foam).
+**Built with ❤️ by  [Pars-Stack](https://github.com/pars-stack)**
 

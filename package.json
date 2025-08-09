@@ -38,12 +38,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/react-foam/react-foam.git"
+    "url": "https://github.com/pars-stack/react-foam.git"
   },
   "bugs": {
-    "url": "https://github.com/react-foam/react-foam/issues"
+    "url": "https://github.com/pars-stack/react-foam/issues"
   },
-  "homepage": "https://react-foam.dev",
+  "homepage": "https://github.com/pars-stack",
   "peerDependencies": {
     "react": ">=16.8.0"
   },
