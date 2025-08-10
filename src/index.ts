@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 // Type definitions
 type Listener<T> = (state: T) => void;
@@ -66,7 +66,7 @@ export function createStore<T>(initialState: T): StoreHook<T> {
   function useStore<R>(selector?: Selector<T, R>): T | R {
     const [, forceUpdate] = useState({});
     const selectorRef = useRef(selector);
-    const stateRef = useRef<T | R>();
+    const stateRef = useRef<T | R>(selector ? selector(store.getState()) : store.getState());
     const hasSelector = selector !== undefined;
 
     // Update selector ref

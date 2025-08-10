@@ -315,10 +315,11 @@ describe('React Foam', () => {
     });
 
     it('should handle errors in selectors gracefully', () => {
-      const useStore = createStore({ value: null as any });
+      type StoreState = { value: { nonExistent: string } | null };
+      const useStore = createStore<StoreState>({ value: null });
 
       expect(() => {
-        renderHook(() => useStore((state) => state.value.nonExistent));
+        renderHook(() => useStore((state) => state.value!.nonExistent));
       }).toThrow();
     });
   });
@@ -352,7 +353,7 @@ describe('React Foam', () => {
   describe('memory management', () => {
     it('should clean up listeners on unmount', () => {
       const useStore = createStore({ count: 0 });
-      const { unmount, rerender } = renderHook(() => useStore());
+      const { unmount } = renderHook(() => useStore());
 
       act(() => {
         useStore.setState({ count: 1 });
