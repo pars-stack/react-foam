@@ -286,14 +286,13 @@ const formActions = {
 - Read the full [README](README.md) for comprehensive documentation
 - Check out the [examples](examples/) directory for more complex use cases
 - See [CONTRIBUTING.md](CONTRIBUTING.md) if you want to contribute
-- Visit our [website](https://react-foam.dev) for more resources
 
 ## Need Help?
 
 - 📖 [Full Documentation](README.md)
-- 💬 [GitHub Discussions](https://github.com/react-foam/react-foam/discussions)
-- 🐛 [Report Issues](https://github.com/react-foam/react-foam/issues)
-- 💡 [Feature Requests](https://github.com/react-foam/react-foam/issues)
+- 💬 [GitHub Discussions](https://github.com/pars-pack/react-foam/discussions)
+- 🐛 [Report Issues](https://github.com/pars-pack/react-foam/issues)
+- 💡 [Feature Requests](https://github.com/pars-pack/react-foam/issues)
 
 Happy coding with React Foam! 🎉
 
