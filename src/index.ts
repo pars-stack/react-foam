@@ -13,11 +13,9 @@ interface Store<T> {
   destroy: () => void;
 }
 
-interface StoreHook<T> {
+interface StoreHook<T> extends Store<T> {
   (): T;
   <R>(selector: Selector<T, R>): R;
-  getState: () => T;
-  setState: SetState<T>;
 }
 
 /**
@@ -109,7 +107,9 @@ export function createStore<T>(initialState: T): StoreHook<T> {
   // Attach store methods to the hook
   useStore.getState = getState;
   useStore.setState = setState;
-
+  useStore.subscribe = subscribe;
+  useStore.destroy = destroy; 
+  
   return useStore as StoreHook<T>;
 }
 
