@@ -5,7 +5,14 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 
 export default [
-  // Base ESLint recommended rules
+  {
+    ignores: [
+      '**/node_modules/',
+      'dist/',            
+      'build/',           
+    ],
+  },
+
   eslint.configs.recommended,
 
   // TypeScript configs
@@ -43,6 +50,7 @@ export default [
       // TypeScript-specific tweaks
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 ];

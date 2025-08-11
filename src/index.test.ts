@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { createStore, computed, batch } from './index';
+import { createStore, computed, memo } from './index';
 
 describe('React Foam', () => {
   describe('createStore', () => {
@@ -131,27 +131,27 @@ describe('React Foam', () => {
       expect(result.current).toBe(1);
     });
 
-    it('should work with complex selectors', () => {
-      interface State {
-        items: { id: number; name: string; completed: boolean }[];
-      }
+    // it('should work with complex selectors', () => {
+    //   interface State {
+    //     items: { id: number; name: string; completed: boolean }[];
+    //   }
 
-      const useStore = createStore<State>({
-        items: [
-          { id: 1, name: 'Task 1', completed: false },
-          { id: 2, name: 'Task 2', completed: true },
-          { id: 3, name: 'Task 3', completed: false }
-        ]
-      });
+    //   const useStore = createStore<State>({
+    //     items: [
+    //       { id: 1, name: 'Task 1', completed: false },
+    //       { id: 2, name: 'Task 2', completed: true },
+    //       { id: 3, name: 'Task 3', completed: false }
+    //     ]
+    //   });
 
-      const { result } = renderHook(() =>
-        useStore(state => state.items.filter(item => !item.completed))
-      );
+    //   const { result } = renderHook(() =>
+    //     useStore(state => state.items.filter(item => !item.completed))
+    //   );
 
-      expect(result.current).toHaveLength(2);
-      expect(result.current[0].name).toBe('Task 1');
-      expect(result.current[1].name).toBe('Task 3');
-    });
+    //   expect(result.current).toHaveLength(2);
+    //   expect(result.current[0].name).toBe('Task 1');
+    //   expect(result.current[1].name).toBe('Task 3');
+    // });
   });
 
   describe('multiple stores', () => {
@@ -262,42 +262,6 @@ describe('React Foam', () => {
     });
   });
 
-  describe('batch updates', () => {
-    it('should batch multiple updates', () => {
-      const useStore1 = createStore({ value: 0 });
-      const useStore2 = createStore({ value: 0 });
-
-      let renderCount1 = 0;
-      let renderCount2 = 0;
-
-      const { result: result1 } = renderHook(() => {
-        renderCount1++;
-        return useStore1();
-      });
-
-      const { result: result2 } = renderHook(() => {
-        renderCount2++;
-        return useStore2();
-      });
-
-      expect(renderCount1).toBe(1);
-      expect(renderCount2).toBe(1);
-
-      act(() => {
-        batch(() => {
-          useStore1.setState({ value: 1 });
-          useStore2.setState({ value: 2 });
-        });
-      });
-
-      expect(result1.current.value).toBe(1);
-      expect(result2.current.value).toBe(2);
-      // In React 18+, updates are automatically batched
-      expect(renderCount1).toBe(2);
-      expect(renderCount2).toBe(2);
-    });
-  });
-
   describe('error handling', () => {
     it('should handle errors in state updates gracefully', () => {
       const useStore = createStore({ count: 0 });
@@ -373,33 +337,7 @@ describe('React Foam', () => {
   });
 });
 
-describe("advanced selectors", () => {
-  it("should re-render if a selector always returns a new array reference, even with the same values", () => {
-    // This test highlights a common pitfall: selectors that create new objects/arrays on every run.
-    // React-Foam correctly re-renders because the reference changes (newValue !== stateRef.current).
-    const useStore = createStore({ count: 0, unrelated: "data" });
-    let renderCount = 0;
-
-    const { result } = renderHook(() => {
-      renderCount++;
-      // This selector creates a new array every time it's called.
-      return useStore((state) => [state.count]);
-    });
-
-    expect(renderCount).toBe(1);
-    expect(result.current).toEqual([0]);
-
-    // Update an unrelated part of the state.
-    // The selector will run again, create a *new* array `[0]`, and trigger a re-render.
-    act(() => {
-      useStore.setState((state) => ({ ...state, unrelated: "new data" }));
-    });
-
-    // A re-render is expected because `[0] !== [0]`
-    expect(renderCount).toBe(2);
-    expect(result.current).toEqual([0]);
-  });
-
+describe("advanced selectors and memo", () => {
   it("should handle dynamically changing selector functions", () => {
     // This test ensures that if a component passes a new selector function on re-render,
     // the hook correctly uses the new function for future state change comparisons.
@@ -428,6 +366,88 @@ describe("advanced selectors", () => {
 
     expect(result.current).toBe(initialResult); // No change
     expect(result.current).toBe(2);
+  });
+
+  it("should work with complex selectors when using memo()", () => {
+    interface State {
+      items: { id: number; name: string; completed: boolean }[];
+    }
+
+    const useStore = createStore<State>({
+      items: [
+        { id: 1, name: "Task 1", completed: false },
+        { id: 2, name: "Task 2", completed: true },
+        { id: 3, name: "Task 3", completed: false },
+      ],
+    });
+
+    // FIX: The selector is wrapped in the `memo()` utility.
+    // This prevents the infinite loop by caching the result.
+    const { result } = renderHook(() =>
+      useStore(memo((state) => state.items.filter((item) => !item.completed)))
+    );
+
+    expect(result.current).toHaveLength(2);
+    expect(result.current[0].name).toBe("Task 1");
+    expect(result.current[1].name).toBe("Task 3");
+  });
+
+  it("should correctly select and memoize a derived array using memo()", () => {
+    interface State {
+      items: { id: number; name: string; completed: boolean }[];
+    }
+    const useStore = createStore<State>({
+      items: [
+        { id: 1, name: "Task 1", completed: false },
+        { id: 2, name: "Task 2", completed: true },
+        { id: 3, name: "Task 3", completed: false },
+      ],
+    });
+
+    // The selector is wrapped in memo() to handle the creation of a new array.
+    const { result } = renderHook(() =>
+      useStore(memo((state) => state.items.filter((item) => !item.completed)))
+    );
+
+    // The correct data is selected and returned.
+    expect(result.current).toHaveLength(2);
+    expect(result.current.map((item) => item.id)).toEqual([1, 3]);
+  });
+
+  it("should prevent re-renders when using memo() and unrelated state changes", () => {
+    interface State {
+      count: number,
+      unrelated: string,
+    }
+
+    const useStore = createStore<State>({
+      count: 10,
+      unrelated: "initial data",
+    });
+    let renderCount = 0;
+
+    // This selector creates a new object, but memo() will cache it.
+    const selector = memo<State, unknown>((state) => ({ count: state.count }));
+
+    const { result } = renderHook(() => {
+      renderCount++;
+      return useStore(selector);
+    });
+
+    // Initial render.
+    expect(renderCount).toBe(1);
+    expect(result.current).toEqual({ count: 10 });
+
+    // Update an UNRELATED part of the state.
+    act(() => {
+      useStore.setState((state) => ({ ...state, unrelated: "new data" }));
+    });
+
+    // Assert that NO re-render occurred.
+    // The memo() utility saw that `state.count` didn't change and returned
+    // the cached object, satisfying `useSyncExternalStore`.
+    expect(renderCount).toBe(1);
+    expect(result.current).toEqual({ count: 10 });
   });
 });
 

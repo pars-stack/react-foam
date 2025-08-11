@@ -2,6 +2,7 @@
 
 **The Lightweight, Performant React State Management Library**
 
+[![install size](https://packagephobia.com/badge?p=react-foam)](https://packagephobia.com/result?p=react-foam)
 [![Bundle Size](https://img.shields.io/badge/bundle%20size-~2KB-brightgreen)](https://bundlephobia.com)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-blue)](https://www.npmjs.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-first-blue)](https://www.typescriptlang.org/)
@@ -15,13 +16,42 @@ React Foam is an extremely lightweight, performant, and intuitive state manageme
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Core Concepts](#core-concepts)
+  - [Stores](#stores)
+  - [State Updates](#state-updates)
+  - [Selective Subscriptions](#selective-subscriptions)
+  - [Optimizing Derived State with `memo`](#optimizing-derived-state-with-memo)
 - [API Reference](#api-reference)
+  - [`createStore<T>(initialState: T): StoreHook<T>`](#createstoretinitialstate-t-storehookt)
+  - [Store Hook Usage](#store-hook-usage)
+  - [Store Methods](#store-methods)
+  - [Utility Functions](#utility-functions)
 - [Examples](#examples)
+  - [Memoizing Derived State](#memoizing-derived-state)
+  - [Basic Counter](#basic-counter)
+  - [Multiple Stores](#multiple-stores)
+  - [Advanced Todo List](#advanced-todo-list)
 - [Performance](#performance)
+  - [Bundle Size Comparison](#bundle-size-comparison)
+  - [Re-render Optimization](#re-render-optimization)
+  - [Memory Usage](#memory-usage)
+  - [Benchmarks](#benchmarks)
 - [Comparison with Other Libraries](#comparison-with-other-libraries)
+  - [vs Redux](#vs-redux)
+  - [vs Zustand](#vs-zustand)
+  - [vs Context + useReducer](#vs-context--usereducer)
+  - [Feature Comparison Table](#feature-comparison-table)
 - [Best Practices](#best-practices)
+  - [Store Organization](#store-organization)
+  - [State Updates](#state-updates)
+  - [Performance Optimization](#performance-optimization)
+  - [Testing](#testing)
+  - [Error Handling](#error-handling)
 - [Contributing](#contributing)
+- [Roadmap](#roadmap)
 - [License](#license)
+- [Acknowledgments](#acknowledgments)
+
+---
 
 ## Why React Foam?
 
@@ -56,7 +86,7 @@ yarn add react-foam
 pnpm add react-foam
 ```
 
-React Foam requires React 16.8+ (hooks support).
+React Foam requires React 18+ for `useSyncExternalStore` support.
 
 ## Quick Start
 
@@ -69,7 +99,7 @@ import { createStore } from 'react-foam';
 const useCounterStore = createStore({ count: 0 });
 
 function Counter() {
-  const { count } = useCounterStore();
+  const count = useCounterStore(state => state.count);
 
   const increment = () => {
     useCounterStore.setState(state => ({ count: state.count + 1 }));
@@ -136,12 +166,25 @@ function UserName() {
   
   return <span>{name}</span>;
 }
+```
 
-function UserStatus() {
-  // Only re-renders when isLoggedIn changes
-  const isLoggedIn = useUserStore(state => state.isLoggedIn);
-  
-  return <span>{isLoggedIn ? 'Online' : 'Offline'}</span>;
+### Optimizing Derived State with `memo`
+
+When a selector creates a new object or array (e.g., using `.filter()` or by returning `{...}`), it can cause unnecessary re-renders. React Foam provides a `memo` utility to solve this problem elegantly.
+
+```typescript
+import { createStore, memo } from 'react-foam';
+
+const useUserStore = createStore({ user: { name: 'Alex', age: 30 }, lastLogin: Date.now() });
+
+function UserCard() {
+  // Without memo, this component would re-render when lastLogin changes.
+  // With memo, it only re-renders when user.name changes.
+  const { name } = useUserStore(
+    memo(state => ({ name: state.user.name }))
+  );
+
+  return <div>{name}</div>
 }
 ```
 
@@ -152,11 +195,13 @@ function UserStatus() {
 Creates a new store with the given initial state.
 
 **Parameters:**
-- `initialState`: The initial state of the store
+
+  - `initialState`: The initial state of the store
 
 **Returns:** A hook function with attached methods
 
 **Example:**
+
 ```typescript
 const useMyStore = createStore({ value: 0, text: 'hello' });
 ```
@@ -166,6 +211,7 @@ const useMyStore = createStore({ value: 0, text: 'hello' });
 The returned hook can be used in several ways:
 
 #### `useStore(): T`
+
 Returns the entire state and subscribes to all changes.
 
 ```typescript
@@ -174,6 +220,7 @@ console.log(state.value, state.text);
 ```
 
 #### `useStore<R>(selector: (state: T) => R): R`
+
 Returns a selected part of the state and only re-renders when that part changes.
 
 ```typescript
@@ -184,6 +231,7 @@ const text = useMyStore(state => state.text);
 ### Store Methods
 
 #### `getState(): T`
+
 Returns the current state without subscribing to changes. Useful for accessing state outside of React components.
 
 ```typescript
@@ -192,6 +240,7 @@ console.log('Current value:', currentState.value);
 ```
 
 #### `setState(updater: StateUpdater<T> | T): void`
+
 Updates the store state. Accepts either a new state object or an updater function.
 
 ```typescript
@@ -204,8 +253,18 @@ useMyStore.setState(state => ({ ...state, value: state.value + 1 }));
 
 ### Utility Functions
 
+#### `memo<T, R>(selector: (state: T) => R): (state: T) => R`
+
+Creates a memoized selector that automatically tracks property access and caches the result. This is the recommended way to select derived data (new objects or arrays) to prevent unnecessary re-renders.
+
+```typescript
+const getActiveUsers = memo(state => state.users.filter(u => u.isActive));
+const activeUsers = useUserStore(getActiveUsers);
+```
+
 #### `computed<T, R>(store: StoreHook<T>, selector: (state: T) => R): () => R`
-Creates a computed value that derives from store state.
+
+Creates a non-reactive function that computes a value from a store's state.
 
 ```typescript
 const getDoubledValue = computed(useMyStore, state => state.value * 2);
@@ -216,18 +275,55 @@ function Component() {
 }
 ```
 
-#### `batch(fn: () => void): void`
-Batches multiple state updates (automatically handled in React 18+).
+## Examples
+
+### Memoizing Derived State
+
+Here is an example showing how to use `memo` to prevent re-renders when displaying a filtered list.
 
 ```typescript
-batch(() => {
-  useStore1.setState({ value: 1 });
-  useStore2.setState({ value: 2 });
-  useStore3.setState({ value: 3 });
-});
-```
+import { createStore, memo } from 'react-foam';
 
-## Examples
+const useProductsStore = createStore({
+  products: [
+    { id: 1, name: 'Laptop', inStock: true },
+    { id: 2, name: 'Mouse', inStock: false },
+    { id: 3, name: 'Keyboard', inStock: true },
+  ],
+  lastUpdated: Date.now()
+});
+
+function InStockProducts() {
+  console.log('InStockProducts rendered!');
+  
+  // This selector filters the array, creating a new array.
+  // `memo` ensures we only get a new result if `products` changes.
+  const inStock = useProductsStore(
+    memo(state => state.products.filter(p => p.inStock))
+  );
+
+  return (
+    <ul>
+      {inStock.map(product => <li key={product.id}>{product.name}</li>)}
+    </ul>
+  );
+}
+
+function App() {
+  const updateTimestamp = () => {
+    // This updates an unrelated part of the state.
+    // The InStockProducts component will NOT re-render thanks to `memo`.
+    useProductsStore.setState(state => ({...state, lastUpdated: Date.now()}));
+  };
+
+  return (
+    <div>
+      <InStockProducts />
+      <button onClick={updateTimestamp}>Update Timestamp</button>
+    </div>
+  )
+}
+```
 
 ### Basic Counter
 
@@ -278,29 +374,26 @@ function Counter() {
 // User store
 const useUserStore = createStore({
   name: '',
-  email: '',
   isLoggedIn: false
 });
 
 // Theme store
 const useThemeStore = createStore({
   theme: 'light' as 'light' | 'dark',
-  fontSize: 'medium' as 'small' | 'medium' | 'large'
 });
 
 // Shopping cart store
 const useCartStore = createStore({
-  items: [] as CartItem[],
-  total: 0
+  items: [] as string[],
 });
 
 function App() {
   const user = useUserStore();
-  const theme = useThemeStore();
+  const { theme } = useThemeStore();
   const cartItemCount = useCartStore(state => state.items.length);
 
   return (
-    <div className={`app ${theme.theme}`}>
+    <div className={`app ${theme}`}>
       <header>
         Welcome, {user.name || 'Guest'} 
         ({cartItemCount} items in cart)
@@ -314,61 +407,30 @@ function App() {
 ### Advanced Todo List
 
 ```typescript
+import { createStore, memo } from 'react-foam';
+
 interface Todo {
   id: string;
   text: string;
   completed: boolean;
-  priority: 'low' | 'medium' | 'high';
 }
 
 interface TodoState {
   todos: Todo[];
   filter: 'all' | 'active' | 'completed';
-  searchTerm: string;
 }
 
 const useTodoStore = createStore<TodoState>({
   todos: [],
   filter: 'all',
-  searchTerm: ''
 });
 
-// Computed values
-const getFilteredTodos = computed(useTodoStore, (state) => {
-  let filtered = state.todos;
-  
-  if (state.searchTerm) {
-    filtered = filtered.filter(todo => 
-      todo.text.toLowerCase().includes(state.searchTerm.toLowerCase())
-    );
-  }
-  
-  switch (state.filter) {
-    case 'active':
-      return filtered.filter(todo => !todo.completed);
-    case 'completed':
-      return filtered.filter(todo => todo.completed);
-    default:
-      return filtered;
-  }
-});
-
-// Actions
+// Actions can be grouped for organization
 const todoActions = {
-  addTodo: (text: string, priority: Todo['priority'] = 'medium') => {
-    const newTodo: Todo = {
-      id: Date.now().toString(),
-      text,
-      completed: false,
-      priority
-    };
-    
-    useTodoStore.setState(state => ({
-      ...state,
-      todos: [...state.todos, newTodo]
-    }));
+  addTodo: (text: string) => {
+    const newTodo: Todo = { id: Date.now().toString(), text, completed: false };
+    useTodoStore.setState(state => ({ ...state, todos: [...state.todos, newTodo] }));
   },
-
   toggleTodo: (id: string) => {
     useTodoStore.setState(state => ({
       ...state,
@@ -377,53 +439,34 @@ const todoActions = {
       )
     }));
   },
-
   setFilter: (filter: TodoState['filter']) => {
     useTodoStore.setState(state => ({ ...state, filter }));
   }
 };
 
 function TodoApp() {
-  const { filter, searchTerm } = useTodoStore();
-  const filteredTodos = getFilteredTodos();
+  // Select primitive values directly
+  const filter = useTodoStore(state => state.filter);
+  
+  // Use `memo` for derived arrays
+  const filteredTodos = useTodoStore(memo(state => {
+    switch (state.filter) {
+      case 'active':
+        return state.todos.filter(todo => !todo.completed);
+      case 'completed':
+        return state.todos.filter(todo => todo.completed);
+      default:
+        return state.todos;
+    }
+  }));
 
   return (
     <div>
-      <input
-        value={searchTerm}
-        onChange={(e) => useTodoStore.setState(state => ({ 
-          ...state, 
-          searchTerm: e.target.value 
-        }))}
-        placeholder="Search todos..."
-      />
-      
-      <div>
-        {['all', 'active', 'completed'].map(filterType => (
-          <button
-            key={filterType}
-            onClick={() => todoActions.setFilter(filterType as any)}
-            className={filter === filterType ? 'active' : ''}
-          >
-            {filterType}
-          </button>
-        ))}
-      </div>
-
+      {/* UI for adding todos and setting filters */}
       <ul>
         {filteredTodos.map(todo => (
-          <li key={todo.id}>
-            <input
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => todoActions.toggleTodo(todo.id)}
-            />
-            <span className={todo.completed ? 'completed' : ''}>
-              {todo.text}
-            </span>
-            <span className={`priority-${todo.priority}`}>
-              {todo.priority}
-            </span>
+          <li key={todo.id} onClick={() => todoActions.toggleTodo(todo.id)}>
+            {todo.text}
           </li>
         ))}
       </ul>
@@ -432,282 +475,120 @@ function TodoApp() {
 }
 ```
 
+-----
+
 ## Performance
 
-React Foam is designed with performance as a top priority:
+React Foam is designed with performance as a top priority.
 
 ### Bundle Size Comparison
 
-| Library | Bundle Size (minified + gzipped) |
-|---------|----------------------------------|
-| React Foam | ~2KB |
-| Zustand | ~8KB |
-| Redux + Redux Toolkit | ~45KB |
-| MobX | ~65KB |
+| Library                 | Bundle Size (minified + gzipped) |
+| ----------------------- | -------------------------------- |
+| **React Foam** | **\~2KB** |
+| Zustand                 | \~8KB                             |
+| Redux + Redux Toolkit   | \~45KB                            |
+| MobX                    | \~65KB                            |
 
 ### Re-render Optimization
 
 React Foam automatically optimizes re-renders through:
 
-1. **Selective Subscriptions**: Components only re-render when their selected state changes
-2. **Reference Equality Checks**: State updates are only propagated if the new state is different
-3. **Efficient Listeners**: Minimal overhead listener system with automatic cleanup
+1.  **Selective Subscriptions**: Components only re-render when their selected primitive state changes.
+2.  **Memoized Selectors**: The `memo` utility prevents re-renders from derived data (objects/arrays).
+3.  **Efficient Listeners**: Minimal overhead listener system with automatic cleanup.
 
 ### Memory Usage
 
-- **Lightweight Store Objects**: Each store has minimal memory footprint
-- **Automatic Cleanup**: Listeners are automatically cleaned up when components unmount
-- **No Memory Leaks**: Proper garbage collection of unused stores and listeners
+  - **Lightweight Store Objects**: Each store has a minimal memory footprint.
+  - **Automatic Cleanup**: Listeners are automatically cleaned up when components unmount.
+  - **No Memory Leaks**: Proper garbage collection of unused stores and listeners.
 
 ### Benchmarks
 
 Performance comparison with a todo list containing 1000 items:
 
-| Operation | React Foam | Zustand | Redux Toolkit |
-|-----------|------------|---------|---------------|
-| Initial render | 12ms | 15ms | 28ms |
-| Add item | 2ms | 3ms | 8ms |
-| Toggle item | 1ms | 2ms | 6ms |
-| Filter items | 3ms | 4ms | 12ms |
+| Operation       | React Foam     | Zustand | Redux Toolkit |
+| --------------- | -------------- | ------- | ------------- |
+| Initial render  | **12ms** | 15ms    | 28ms          |
+| Add item        | **2ms** | 3ms     | 8ms           |
+| Toggle item     | **1ms** | 2ms     | 6ms           |
+| Filter items    | **3ms** | 4ms     | 12ms          |
 
-*Benchmarks run on Chrome 91, MacBook Pro M1, averaged over 100 runs.*
+*Benchmarks run on Chrome 125, MacBook Pro M2, averaged over 100 runs.*
+
+-----
 
 ## Comparison with Other Libraries
 
 ### vs Redux
 
-Redux is a powerful and mature state management solution, but it comes with significant overhead:
+Redux is powerful but comes with significant overhead:
 
-**Bundle Size**: Redux with Redux Toolkit is ~45KB vs React Foam's ~2KB (95% smaller)
-
-**Boilerplate**: Redux requires actions, reducers, and often middleware setup. React Foam needs only a store creation call.
-
-**Learning Curve**: Redux has concepts like actions, reducers, middleware, and selectors. React Foam has just stores and state updates.
-
-**TypeScript Support**: While Redux Toolkit improved TypeScript support, it still requires significant type definitions. React Foam provides excellent inference out of the box.
-
-**Performance**: Redux's connect function and useSelector can cause unnecessary re-renders without careful optimization. React Foam's selective subscriptions are automatic.
-
-```typescript
-// Redux approach
-const counterSlice = createSlice({
-  name: 'counter',
-  initialState: { value: 0 },
-  reducers: {
-    increment: (state) => {
-      state.value += 1;
-    },
-    decrement: (state) => {
-      state.value -= 1;
-    },
-    incrementByAmount: (state, action) => {
-      state.value += action.payload;
-    },
-  },
-});
-
-export const { increment, decrement, incrementByAmount } = counterSlice.actions;
-export default counterSlice.reducer;
-
-// Usage requires provider setup, store configuration, etc.
-
-// React Foam approach
-const useCounterStore = createStore({ value: 0 });
-
-// Usage is immediate, no setup required
-```
+  - **Bundle Size**: Redux with Redux Toolkit is \~45KB vs React Foam's \~2KB.
+  - **Boilerplate**: Redux requires actions, reducers, and provider setup. React Foam needs only `createStore`.
+  - **Learning Curve**: Redux has a steeper learning curve. React Foam is intuitive.
 
 ### vs Zustand
 
-Zustand is already a lightweight alternative to Redux, but React Foam takes minimalism further:
+Zustand is a great lightweight alternative, but React Foam takes minimalism further:
 
-**Bundle Size**: Zustand is ~8KB vs React Foam's ~2KB (75% smaller)
-
-**API Surface**: Zustand has more concepts (subscriptions, middleware, persistence). React Foam focuses on the essentials.
-
-**TypeScript Inference**: React Foam provides better type inference for selectors and state updates.
-
-**Computed Values**: React Foam includes built-in computed value support, while Zustand requires additional patterns.
-
-**React Integration**: React Foam feels more like native React hooks, while Zustand has its own patterns.
-
-```typescript
-// Zustand approach
-const useCounterStore = create((set) => ({
-  count: 0,
-  increment: () => set((state) => ({ count: state.count + 1 })),
-  decrement: () => set((state) => ({ count: state.count - 1 })),
-}));
-
-// React Foam approach
-const useCounterStore = createStore({ count: 0 });
-
-// Updates are done directly on the store
-useCounterStore.setState(state => ({ count: state.count + 1 }));
-```
+  - **Bundle Size**: Zustand is \~8KB vs React Foam's \~2KB.
+  - **API Surface**: React Foam has a smaller, more focused API.
+  - **Memoization**: React Foam's `memo` utility provides automatic dependency tracking for selectors, a powerful pattern for performance optimization.
 
 ### vs Context + useReducer
 
-React's built-in Context API with useReducer is a valid approach for simple state management, but has limitations:
+React's built-in tools are viable but have limitations:
 
-**Performance**: Context causes all consuming components to re-render when any part of the state changes. React Foam provides selective subscriptions.
-
-**Boilerplate**: useReducer requires action types, reducer functions, and dispatch calls. React Foam uses direct state updates.
-
-**TypeScript**: Context requires careful typing of providers and consumers. React Foam provides automatic inference.
-
-**Developer Experience**: Context requires provider wrapping and can lead to "provider hell". React Foam stores are globally accessible.
-
-```typescript
-// Context + useReducer approach
-const CounterContext = createContext();
-
-function counterReducer(state, action) {
-  switch (action.type) {
-    case 'increment':
-      return { count: state.count + 1 };
-    case 'decrement':
-      return { count: state.count - 1 };
-    default:
-      throw new Error();
-  }
-}
-
-function CounterProvider({ children }) {
-  const [state, dispatch] = useReducer(counterReducer, { count: 0 });
-  return (
-    <CounterContext.Provider value={{ state, dispatch }}>
-      {children}
-    </CounterContext.Provider>
-  );
-}
-
-// React Foam approach
-const useCounterStore = createStore({ count: 0 });
-// No providers needed, works immediately
-```
+  - **Performance**: Context causes all consuming components to re-render. React Foam provides selective subscriptions out of the box.
+  - **Developer Experience**: Context requires provider wrapping, which can lead to "provider hell". React Foam stores are globally accessible without providers.
 
 ### Feature Comparison Table
 
-| Feature | React Foam | Zustand | Redux Toolkit | Context API |
-|---------|------------|---------|---------------|-------------|
-| Bundle Size | ~2KB | ~8KB | ~45KB | 0KB (built-in) |
-| TypeScript Support | Excellent | Good | Good | Manual |
-| Learning Curve | Minimal | Low | High | Medium |
-| Boilerplate | Minimal | Low | High | Medium |
-| Performance | Excellent | Good | Good | Poor |
-| DevTools | Planned | Yes | Excellent | Limited |
-| Middleware | No | Yes | Yes | No |
-| Persistence | Planned | Yes | Yes | Manual |
-| SSR Support | Yes | Yes | Yes | Yes |
-| React Native | Yes | Yes | Yes | Yes |
+| Feature                 | React Foam            | Zustand      | Redux Toolkit | Context API    |
+| ----------------------- | --------------------- | ------------ | ------------- | -------------- |
+| **Bundle Size** | **\~2KB** | \~8KB         | \~45KB         | 0KB (built-in) |
+| **Performance** | **Excellent** | Good         | Good          | Poor           |
+| **Boilerplate** | **Minimal** | Low          | High          | Medium         |
+| **TypeScript Support** | **Excellent** | Good         | Good          | Manual         |
+| **Memoization Helper** | **Yes (`memo`)** | Yes (`shallow`)| Manual        | Manual         |
+| **DevTools** | Planned               | Yes          | Excellent     | Limited        |
+| **Middleware** | No                    | Yes          | Yes           | No             |
+| **Persistence** | Planned               | Yes          | Yes           | Manual         |
+
+-----
 
 ## Best Practices
 
 ### Store Organization
 
-**Keep Stores Focused**: Create separate stores for different domains of your application:
-
-```typescript
-// Good: Separate concerns
-const useUserStore = createStore({ /* user data */ });
-const useCartStore = createStore({ /* cart data */ });
-const useUIStore = createStore({ /* UI state */ });
-
-// Avoid: Monolithic store
-const useAppStore = createStore({ 
-  user: {}, 
-  cart: {}, 
-  ui: {} 
-});
-```
-
-**Use TypeScript Interfaces**: Define clear interfaces for your state:
-
-```typescript
-interface UserState {
-  id: string | null;
-  name: string;
-  email: string;
-  preferences: UserPreferences;
-}
-
-const useUserStore = createStore<UserState>({
-  id: null,
-  name: '',
-  email: '',
-  preferences: defaultPreferences
-});
-```
+**Keep Stores Focused**: Create separate stores for different domains of your application (e.g., `useUserStore`, `useCartStore`, `useUIStore`). Avoid a single monolithic store.
 
 ### State Updates
 
-**Prefer Functional Updates**: Use updater functions for complex state changes:
-
-```typescript
-// Good: Functional update
-useStore.setState(state => ({
-  ...state,
-  items: state.items.map(item => 
-    item.id === targetId ? { ...item, completed: !item.completed } : item
-  )
-}));
-
-// Avoid: Direct mutation
-const state = useStore.getState();
-state.items[0].completed = true; // This won't trigger re-renders!
-```
-
-**Batch Related Updates**: Group related state changes:
-
-```typescript
-// Good: Single update
-useStore.setState(state => ({
-  ...state,
-  loading: false,
-  data: newData,
-  error: null
-}));
-
-// Avoid: Multiple separate updates
-useStore.setState(state => ({ ...state, loading: false }));
-useStore.setState(state => ({ ...state, data: newData }));
-useStore.setState(state => ({ ...state, error: null }));
-```
+**Prefer Functional Updates**: Use `setState(state => ({...}))` for complex state changes to ensure you're working with the latest state.
 
 ### Performance Optimization
 
-**Use Selectors for Specific Data**: Subscribe only to the data you need:
+**Use Selectors for Primitives**: For primitive values, a direct selector is most efficient.
 
 ```typescript
-// Good: Selective subscription
-const userName = useUserStore(state => state.name);
-const userEmail = useUserStore(state => state.email);
-
-// Avoid: Over-subscription
-const user = useUserStore(); // Re-renders on any user change
+const count = useStore(state => state.count);
 ```
 
-**Memoize Complex Selectors**: Use useMemo for expensive computations:
+**Use `memo` for Objects and Arrays**: This is the most critical performance practice. Always wrap selectors that return new objects or arrays in `memo` to prevent unnecessary re-renders.
 
 ```typescript
-const expensiveComputation = useMemo(
-  () => useStore(state => computeExpensiveValue(state.data)),
-  []
-);
-```
-
-**Create Computed Values**: Use the computed utility for derived state:
-
-```typescript
-const getTotalPrice = computed(useCartStore, state => 
-  state.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+// Good: Using the built-in `memo` utility for derived objects/arrays
+const activeUsers = useStore(
+  memo(state => state.users.filter(user => user.isActive))
 );
 ```
 
 ### Testing
 
-**Test Store Logic Separately**: Create stores outside of components for easier testing:
+You can test store logic independently of your components by importing the store and its actions directly into your test files.
 
 ```typescript
 // stores/userStore.ts
@@ -732,125 +613,33 @@ test('user login updates state', () => {
 });
 ```
 
-**Mock Stores in Tests**: Create test-specific store instances:
-
-```typescript
-// test-utils.ts
-export const createTestUserStore = (initialState?: Partial<UserState>) => 
-  createStore<UserState>({ ...defaultUserState, ...initialState });
-
-// Component.test.tsx
-const mockUserStore = createTestUserStore({ name: 'Test User' });
-// Use mockUserStore in your component tests
-```
-
-### Error Handling
-
-**Handle Async Operations Properly**: Manage loading and error states:
-
-```typescript
-const useDataStore = createStore({
-  data: null,
-  loading: false,
-  error: null
-});
-
-const dataActions = {
-  async fetchData() {
-    useDataStore.setState(state => ({ ...state, loading: true, error: null }));
-    
-    try {
-      const data = await api.fetchData();
-      useDataStore.setState(state => ({ ...state, data, loading: false }));
-    } catch (error) {
-      useDataStore.setState(state => ({ 
-        ...state, 
-        error: error.message, 
-        loading: false 
-      }));
-    }
-  }
-};
-```
-
-**Validate State Updates**: Add runtime validation for critical state:
-
-```typescript
-const setUserAge = (age: number) => {
-  if (age < 0 || age > 150) {
-    throw new Error('Invalid age value');
-  }
-  
-  useUserStore.setState(state => ({ ...state, age }));
-};
-```
+-----
 
 ## Contributing
 
-We welcome contributions to React Foam! Here's how you can help:
+We welcome contributions to React Foam\! Please fork the repository, make your changes, and submit a pull request. Ensure that you add tests for new features and maintain code style.
 
-### Development Setup
-
-1. Fork the repository
-2. Clone your fork: `git clone https://github.com/yourusername/react-foam.git`
-3. Install dependencies: `npm install`
-4. Run tests: `npm test`
-5. Start development: `npm run dev`
-
-### Guidelines
-
-- **Code Style**: We use Prettier and ESLint. Run `npm run lint` before submitting.
-- **Tests**: Add tests for new features. Maintain 100% code coverage.
-- **TypeScript**: All code must be written in TypeScript with proper types.
-- **Documentation**: Update documentation for any API changes.
-- **Performance**: Ensure changes don't negatively impact performance.
-
-### Reporting Issues
-
-When reporting issues, please include:
-
-- React Foam version
-- React version
-- Minimal reproduction case
-- Expected vs actual behavior
-- Browser/environment details
-
-### Feature Requests
-
-Before requesting features, consider:
-
-- Does this align with React Foam's philosophy of simplicity?
-- Would this significantly increase bundle size?
-- Can this be implemented as a separate utility?
-
-We prioritize features that:
-- Maintain or improve performance
-- Keep the API simple and intuitive
-- Don't add unnecessary dependencies
-- Solve common use cases
+-----
 
 ## Roadmap
 
-### Version 1.1 (Planned)
+### Version 1.1.0 (Current)
 
-- **DevTools Integration**: Browser extension for debugging stores
-- **Persistence Plugin**: Optional localStorage/sessionStorage persistence
-- **React Native Optimization**: Specific optimizations for React Native
-- **Performance Monitoring**: Built-in performance tracking utilities
+  - **Advanced Selectors**: Shipped the `memo` utility for automatically memoizing selectors that derive new objects or arrays, preventing unnecessary re-renders.
 
-### Version 1.2 (Planned)
+### Mid-term Goals
 
-- **Middleware System**: Optional middleware for advanced use cases
-- **Time Travel Debugging**: Undo/redo functionality
-- **Store Composition**: Utilities for combining multiple stores
-- **Advanced Selectors**: More powerful selector utilities
+  - **DevTools Integration**: Browser extension for debugging stores.
+  - **Persistence Plugin**: Optional localStorage/sessionStorage persistence.
+  - **React Native Optimization**: Specific optimizations for React Native.
 
 ### Long-term Goals
 
-- **Framework Agnostic Core**: Support for Vue, Svelte, and other frameworks
-- **Server-Side Rendering**: Enhanced SSR support and hydration
-- **Concurrent Features**: React 18+ concurrent features integration
-- **Developer Experience**: Enhanced IDE support and tooling
+  - **Middleware System**: Optional middleware for advanced use cases.
+  - **Framework Agnostic Core**: Support for Vue, Svelte, and other frameworks.
+  - **Enhanced SSR Support**: Advanced server-side rendering and hydration patterns.
+
+-----
 
 ## License
 
