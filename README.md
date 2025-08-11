@@ -1,6 +1,7 @@
 # React Foam
 
 **The Lightweight, Performant React State Management Library**
+
 [![install size](https://packagephobia.com/badge?p=react-foam)](https://packagephobia.com/result?p=react-foam)
 [![Bundle Size](https://img.shields.io/badge/bundle%20size-~2KB-brightgreen)](https://bundlephobia.com)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-blue)](https://www.npmjs.com)
