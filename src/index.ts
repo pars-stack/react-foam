@@ -121,18 +121,5 @@ export function computed<T, R>(
   return () => selector(store.getState());
 }
 
-// Utility function for batch updates
-export function batch(fn: () => void): void {
-  // In React 18+, updates are automatically batched
-  // This is here for potential future optimizations
-  fn();
-}
-
-// Export types for consumers
-export type {
-  Selector,
-  StateUpdater,
-  SetState,
-  StoreHook
-};
+// --- EXPORTED TYPES ---
 

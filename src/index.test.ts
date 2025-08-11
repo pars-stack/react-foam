@@ -262,42 +262,6 @@ describe('React Foam', () => {
     });
   });
 
-  describe('batch updates', () => {
-    it('should batch multiple updates', () => {
-      const useStore1 = createStore({ value: 0 });
-      const useStore2 = createStore({ value: 0 });
-
-      let renderCount1 = 0;
-      let renderCount2 = 0;
-
-      const { result: result1 } = renderHook(() => {
-        renderCount1++;
-        return useStore1();
-      });
-
-      const { result: result2 } = renderHook(() => {
-        renderCount2++;
-        return useStore2();
-      });
-
-      expect(renderCount1).toBe(1);
-      expect(renderCount2).toBe(1);
-
-      act(() => {
-        batch(() => {
-          useStore1.setState({ value: 1 });
-          useStore2.setState({ value: 2 });
-        });
-      });
-
-      expect(result1.current.value).toBe(1);
-      expect(result2.current.value).toBe(2);
-      // In React 18+, updates are automatically batched
-      expect(renderCount1).toBe(2);
-      expect(renderCount2).toBe(2);
-    });
-  });
-
   describe('error handling', () => {
     it('should handle errors in state updates gracefully', () => {
       const useStore = createStore({ count: 0 });
