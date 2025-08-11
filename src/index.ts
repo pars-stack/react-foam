@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useRef, useSyncExternalStore } from "react";
 
 // Type definitions
 type Listener<T> = (state: T) => void;
@@ -50,37 +50,20 @@ export function createStore<T>(initialState: T): StoreHook<T> {
     listeners.clear();
   };
 
-  // Create the store object
-  const store: Store<T> = {
-    getState,
-    setState,
-    subscribe,
-    destroy
-  };
-
-  // The hook function with overloads for selector support
   function useStore(): T;
   function useStore<R>(selector: Selector<T, R>): R;
   function useStore<R>(selector?: Selector<T, R>): T | R {
-    const [, forceUpdate] = useState({});
     const selectorRef = useRef(selector);
-    const stateRef = useRef<T | R>(selector ? selector(store.getState()) : store.getState());
-    const hasSelector = selector !== undefined;
-
-    // Update selector ref
     selectorRef.current = selector;
 
-    // Force re-render function
-    const triggerUpdate = useCallback(() => {
-      forceUpdate({});
+    const getSnapshot = useCallback(() => {
+      const currentSelector = selectorRef.current;
+      const currentState = getState();
+      return currentSelector ? currentSelector(currentState) : currentState;
     }, []);
 
-    // Subscribe to store changes
-    useEffect(() => {
-      const unsubscribe = store.subscribe((newState) => {
-        const newValue = hasSelector && selectorRef.current
-          ? selectorRef.current(newState)
-          : newState;
+    return useSyncExternalStore(subscribe, getSnapshot);
+  }
 
         // Only trigger re-render if the selected value has changed
         if (newValue !== stateRef.current) {

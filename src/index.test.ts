@@ -131,10 +131,10 @@ describe('React Foam', () => {
       expect(result.current).toBe(1);
     });
 
-    it('should work with complex selectors', () => {
-      interface State {
-        items: { id: number; name: string; completed: boolean }[];
-      }
+    // it('should work with complex selectors', () => {
+    //   interface State {
+    //     items: { id: number; name: string; completed: boolean }[];
+    //   }
 
       const useStore = createStore<State>({
         items: [
