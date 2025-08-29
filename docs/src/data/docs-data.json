@@ -1,0 +1,149 @@
+[
+    {
+        "id": "installation",
+        "title": "Installation",
+        "sections": [
+            {
+                "id": "install-package",
+                "title": "Install Package",
+                "blocks": [
+                    {
+                        "type": "snippet",
+                        "language": "bash",
+                        "code": "npm install react-foam"
+                    }
+                ]
+            },
+            {
+                "id": "basic-setup",
+                "title": "Basic Setup",
+                "blocks": [
+                    {
+                        "type": "snippet",
+                        "language": "typescript",
+                        "code": "import { createStore } from 'react-foam';"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "core-concepts",
+        "title": "Core Concepts",
+        "sections": [
+            {
+                "id": "stores",
+                "title": "Stores",
+                "blocks": [
+                    {
+                        "type": "paragraph",
+                        "text": "A store in React Foam is created using the <code>createStore</code> function. Each store is completely independent and manages its own state:"
+                    },
+                    {
+                        "type": "snippet",
+                        "language": "typescript",
+                        "code": "interface UserState {\n  name: string;\n  email: string;\n  isLoggedIn: boolean;\n}\n\nconst useUserStore = createStore<UserState>({\n  name: '',\n  email: '',\n  isLoggedIn: false\n});"
+                    }
+                ]
+            },
+            {
+                "id": "state-updates",
+                "title": "State Updates",
+                "blocks": [
+                    {
+                        "type": "paragraph",
+                        "text": "State updates are performed using the <code>setState</code> method, which accepts either a new state object or an updater function:"
+                    },
+                    {
+                        "type": "snippet",
+                        "language": "typescript",
+                        "code": "// Direct state update\nuseUserStore.setState({\n  name: 'John Doe',\n  email: 'john@example.com',\n  isLoggedIn: true\n});\n\n// Functional update\nuseUserStore.setState(state => ({\n  ...state,\n  name: 'Jane Doe'\n}));"
+                    }
+                ]
+            },
+            {
+                "id": "selective-subscriptions",
+                "title": "Selective Subscriptions",
+                "blocks": [
+                    {
+                        "type": "paragraph",
+                        "text": "Components can subscribe to specific parts of the state using selectors, ensuring minimal re-renders:"
+                    },
+                    {
+                        "type": "snippet",
+                        "language": "typescript",
+                        "code": "function UserName() {\n  // Only re-renders when name changes\n  const name = useUserStore(state => state.name);\n  \n  return <span>{name}</span>;\n}"
+                    }
+                ]
+            },
+            {
+                "id": "optimizing-derived-state",
+                "title": "Optimizing Derived State with memo",
+                "blocks": [
+                    {
+                        "type": "paragraph",
+                        "text": "When a selector creates a new object or array (e.g., using <code>.filter()</code> or by returning <code>{...}</code>), it can cause unnecessary re-renders. React Foam provides a <code>memo</code> utility to solve this problem elegantly."
+                    },
+                    {
+                        "type": "snippet",
+                        "language": "typescript",
+                        "code": "import { createStore, memo } from 'react-foam';\n\nconst useUserStore = createStore({ user: { name: 'Alex', age: 30 }, lastLogin: Date.now() });\n\nfunction UserCard() {\n  // Without memo, this component would re-render when lastLogin changes.\n  // With memo, it only re-renders when user.name changes.\n  const { name } = useUserStore(\n    memo(state => ({ name: state.user.name }))\n  );\n\n  return <div>{name}</div>\n}"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "advanced",
+        "title": "Advanced Usage",
+        "sections": [
+            {
+                "id": "multiple-stores",
+                "title": "Multiple Stores",
+                "blocks": [
+                    {
+                        "type": "paragraph",
+                        "text": "You can create and use multiple stores independently:"
+                    },
+                    {
+                        "type": "snippet",
+                        "language": "typescript",
+                        "code": "const useThemeStore = createStore({ theme: 'light' });\n\nfunction App() {\n  const theme = useThemeStore(state => state.theme);\n  const user = useUserStore(state => state);\n\n  return (\n    <div className={theme}>\n      Welcome {user.name}\n    </div>\n  );\n}"
+                    }
+                ]
+            },
+            {
+                "id": "middleware",
+                "title": "Middleware",
+                "blocks": [
+                    {
+                        "type": "paragraph",
+                        "text": "React Foam supports middleware for logging, persistence, and more."
+                    },
+                    {
+                        "type": "snippet",
+                        "language": "typescript",
+                        "code": "import { createStore, withLogger } from 'react-foam';\n\nconst useCounterStore = createStore(\n  { count: 0 },\n  withLogger\n);"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "examples",
+        "title": "Examples",
+        "sections": [
+            {
+                "id": "counter-store",
+                "title": "Counter Store",
+                "blocks": [
+                    {
+                        "type": "snippet",
+                        "language": "typescript",
+                        "code": "const useCounterStore = createStore({ count: 0 });\n\nfunction Counter() {\n  const { count } = useCounterStore();\n\n  return (\n    <div>\n      <button onClick={() => useCounterStore.setState(s => ({ count: s.count - 1 }))}>\n        -\n      </button>\n      {count}\n      <button onClick={() => useCounterStore.setState(s => ({ count: s.count + 1 }))}>\n        +\n      </button>\n    </div>\n  );\n}"
+                    }
+                ]
+            }
+        ]
+    }
+]
