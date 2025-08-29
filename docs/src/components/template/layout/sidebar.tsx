@@ -66,7 +66,7 @@ const Sidebar = ({ mobileOpen, setMobileOpen }: SidebarProps) => {
     return (
         <aside
             className={cn(
-                '-ml-4 sm:-ml-6 lg:-ml-8 -mt-8 fixed lg:sticky top-16 left-0 z-40 h-screen lg:h-[calc(100vh-4rem)] w-64 p-4 transition-transform transform bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-lg lg:shadow-none overflow-y-auto',
+                '-ml-4 sm:-ml-6 lg:-ml-8 -my-8 fixed lg:sticky top-16 left-0 z-40 h-screen lg:h-[calc(100vh-4rem)] w-64 p-4 transition-transform transform bg-sidebar text-sidebar-foreground border-r border-sidebar-border shadow-lg lg:shadow-none overflow-y-auto',
                 mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
             )}
         >
