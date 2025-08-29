@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   output: 'export', // خروجی استاتیک
   basePath: isProd ? '/react-foam' : '', // اسم ریپو
   assetPrefix: isProd ? '/react-foam/' : '', // برای لینک درست به استایل‌ها و اسکریپت‌ها
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;
