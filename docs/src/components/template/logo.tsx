@@ -2,13 +2,14 @@ import { cn } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+import logo from '@/assets/images/logo.png'
 
 const Logo = ({ className }: { className?: string }) => {
     return (
         <Link href='/' className={cn(className, 'flex items-center space-x-2')}>
             <div className="w-8 h-8 flex items-center justify-center">
                 <Image
-                    src="/images/logo.png"
+                    src={logo}
                     alt='react foam logo'
                     width={32}
                     height={32}

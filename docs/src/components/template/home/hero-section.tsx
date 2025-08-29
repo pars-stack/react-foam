@@ -3,14 +3,14 @@ import { Button } from '@/components/ui/button'
 import { BookOpen, Download, Star } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-
+import logoHuge from '@/assets/images/logo-huge.png'
 const HeroSection = () => {
     return (
         <section className="relative overflow-hidden py-20 sm:py-32">
             <div className="opacity-75 max-sm:hidden max-lg:opacity-20 absolute bottom-5 right-5 z-10 w-100 h-100 flex items-center justify-center">
                 <Image
                     className='animate-spin [animation-duration:120s] '
-                    src="/images/logo-huge.png"
+                    src={logoHuge}
                     alt='react foam logo'
                     width={400}
                     height={400}
