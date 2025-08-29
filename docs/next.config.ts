@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  assetPrefix: '/react-foam/',
+  assetPrefix: isProd ? '/react-foam/' : '',
 };
 
 export default nextConfig;
