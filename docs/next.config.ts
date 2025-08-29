@@ -3,12 +3,12 @@ import type { NextConfig } from 'next';
 const isProd = process.env.NODE_ENV === 'production';
 
 const nextConfig: NextConfig = {
-  output: 'export', // خروجی استاتیک
-  basePath: isProd ? '/react-foam' : '', // اسم ریپو
-  assetPrefix: isProd ? '/react-foam/' : '', // برای لینک درست به استایل‌ها و اسکریپت‌ها
+  output: 'export',
+  basePath: isProd ? '/react-foam' : '',
   images: {
     unoptimized: true,
   },
+  assetPrefix: '/react-foam/',
 };
 
 export default nextConfig;
