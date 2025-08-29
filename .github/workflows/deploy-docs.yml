@@ -1,0 +1,68 @@
+# Name of the GitHub Actions workflow.
+name: Deploy Docs to GitHub Pages
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push events but only for the main branch.
+  push:
+    branches:
+      - main
+    # Only run this workflow if changes are made in the 'docs' directory.
+    paths:
+      - "docs/**"
+
+  # Allows you to run this workflow manually from the Actions tab.
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel.
+jobs:
+  # This workflow contains a single job called "deploy".
+  deploy:
+    name: Deploy Docs
+    runs-on: ubuntu-latest
+
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    # Steps represent a sequence of tasks that will be executed as part of the job.
+    steps:
+      # 1. Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Sets up Node.js in the runner.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20" # Specify the Node.js version you use.
+          cache: "npm"
+          cache-dependency-path: docs/package-lock.json
+
+      # 3. Configure GitHub Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      # 4. Install dependencies and build the Next.js site.
+      - name: Install and Build
+        run: |
+          cd docs
+          npm install
+          npm run build
+        # Assuming your Next.js build command is `next build`.
+        # If your docs project uses `next export`, you'll need to adjust the build script.
+        # Next.js now handles static exports as part of `next build` if `output: 'export'` is in next.config.js.
+
+      # 5. Upload the build artifact to GitHub Pages.
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload the output directory from the docs folder.
+          path: ./docs/out
+
+      # 6. Deploy the artifact to GitHub Pages.
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy": "npm run build && echo $null > out/.nojekyll && git add out && git commit -m 'deploy docs' && 'cd ..' && git subtree push --prefix docs/out origin gh-pages"
   },
   "dependencies": {
     "@radix-ui/react-separator": "^1.1.7",
