@@ -3,6 +3,8 @@ import { BookOpen, Github } from 'lucide-react'
 import Link from 'next/link'
 import Logo from '../logo'
 import { ThemeToggle } from '../toggle-mode'
+import pkg from '../../../../package.json';
+
 
 const Header = () => {
   return (
@@ -11,14 +13,9 @@ const Header = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Logo />
-                <span className="text-xl font-bold bg-gradient-to-bl from-teal-700 to-teal-400 bg-clip-text text-transparent">
-                  React Foam
-                </span>
-              </div>
-              <Badge variant="secondary" className="hidden sm:inline-flex">
-                v1.0.0
+              <Logo />
+              <Badge variant="secondary" className="hidden bg-secondary/50 sm:inline-flex">
+                v{pkg.version}
               </Badge>
               <ThemeToggle />
             </div>
