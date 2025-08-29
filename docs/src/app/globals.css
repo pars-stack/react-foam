@@ -97,7 +97,7 @@
   --chart-5: hsl(40 80% 55%);
 
   /* Sidebar */
-  --sidebar: hsl(0 0% 100%);
+  --sidebar: hsl(0 0% 96%);
   --sidebar-foreground: hsl(210 10% 10%);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
@@ -145,7 +145,7 @@
   --chart-4: hsl(220 65% 60%);
   --chart-5: hsl(10 80% 60%);
 
-  --sidebar: hsl(210 15% 15%);
+  --sidebar: hsl(204 7% 8%);
   --sidebar-foreground: hsl(0 0% 98%);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
