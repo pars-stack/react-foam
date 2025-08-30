@@ -22,8 +22,8 @@ const Footer = () => {
                             <h3 className="font-semibold mb-4">Documentation</h3>
                             <ul className="space-y-2 text-gray-400">
                                 <li><Link href="/docs" className="hover:text-white transition-colors">Getting Started</Link></li>
-                                <li><Link href="/docs/api" className="hover:text-white transition-colors">API Reference</Link></li>
-                                <li><Link href="/docs/examples" className="hover:text-white transition-colors">Examples</Link></li>
+                                {/* <li><Link href="/docs/api" className="hover:text-white transition-colors">API Reference</Link></li>
+                                <li><Link href="/docs/examples" className="hover:text-white transition-colors">Examples</Link></li> */}
                             </ul>
                         </div>
 
@@ -38,8 +38,8 @@ const Footer = () => {
                             <h3 className="font-semibold mb-4">More</h3>
                             <ul className="space-y-2 text-gray-400">
                                 {/* <li><Link href="#" className="hover:text-white transition-colors">Changelog</Link></li> */}
-                                <li><Link href="#" className="hover:text-white transition-colors">Contributing</Link></li>
-                                <li><Link href="#" className="hover:text-white transition-colors">License</Link></li>
+                                <li><Link href="https://github.com/pars-stack/react-foam/?tab=contributing-ov-file#contributing-to-react-foam" className="hover:text-white transition-colors">Contributing</Link></li>
+                                <li><Link href="https://github.com/pars-stack/react-foam/?tab=MIT-1-ov-file#readme" className="hover:text-white transition-colors">License</Link></li>
                             </ul>
                         </div>
                     </div>
