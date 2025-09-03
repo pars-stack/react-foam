@@ -1,21 +1,21 @@
-import { renderHook, act } from '@testing-library/react';
-import { createStore, computed, memo } from './index';
+import { renderHook, act } from "@testing-library/react";
+import { createStore, computed, memo } from "./index";
 
-describe('React Foam', () => {
-  describe('createStore', () => {
-    it('should create a store with initial state', () => {
+describe("React Foam", () => {
+  describe("createStore", () => {
+    it("should create a store with initial state", () => {
       const useStore = createStore({ count: 0 });
       const { result } = renderHook(() => useStore());
       expect(result.current).toEqual({ count: 0 });
     });
 
-    it('should provide getState method', () => {
+    it("should provide getState method", () => {
       const useStore = createStore({ count: 5 });
 
       expect(useStore.getState()).toEqual({ count: 5 });
     });
 
-    it('should provide setState method', () => {
+    it("should provide setState method", () => {
       const useStore = createStore({ count: 0 });
 
       act(() => {
@@ -26,30 +26,30 @@ describe('React Foam', () => {
     });
   });
 
-  describe('state updates', () => {
-    it('should update state with object', () => {
-      const useStore = createStore({ count: 0, name: 'test' });
+  describe("state updates", () => {
+    it("should update state with object", () => {
+      const useStore = createStore({ count: 0, name: "test" });
       const { result } = renderHook(() => useStore());
 
       act(() => {
-        useStore.setState({ count: 5, name: 'updated' });
+        useStore.setState({ count: 5, name: "updated" });
       });
 
-      expect(result.current).toEqual({ count: 5, name: 'updated' });
+      expect(result.current).toEqual({ count: 5, name: "updated" });
     });
 
-    it('should update state with function', () => {
+    it("should update state with function", () => {
       const useStore = createStore({ count: 0 });
       const { result } = renderHook(() => useStore());
 
       act(() => {
-        useStore.setState(state => ({ count: state.count + 1 }));
+        useStore.setState((state) => ({ count: state.count + 1 }));
       });
 
       expect(result.current).toEqual({ count: 1 });
     });
 
-    it('should not trigger re-render if state is the same', () => {
+    it("should not trigger re-render if state is the same", () => {
       const useStore = createStore({ count: 0 });
       const { result } = renderHook(() => useStore());
 
@@ -62,7 +62,7 @@ describe('React Foam', () => {
       expect(result.current).toStrictEqual(initialRender); // Same reference
     });
 
-    it('should handle complex state updates', () => {
+    it("should handle complex state updates", () => {
       interface State {
         user: { name: string; age: number };
         items: string[];
@@ -70,45 +70,45 @@ describe('React Foam', () => {
       }
 
       const initialState: State = {
-        user: { name: 'John', age: 30 },
-        items: ['a', 'b'],
-        settings: { theme: 'light' }
+        user: { name: "John", age: 30 },
+        items: ["a", "b"],
+        settings: { theme: "light" },
       };
 
       const useStore = createStore(initialState);
       const { result } = renderHook(() => useStore());
 
       act(() => {
-        useStore.setState(state => ({
+        useStore.setState((state) => ({
           ...state,
           user: { ...state.user, age: 31 },
-          items: [...state.items, 'c']
+          items: [...state.items, "c"],
         }));
       });
 
       expect(result.current).toEqual({
-        user: { name: 'John', age: 31 },
-        items: ['a', 'b', 'c'],
-        settings: { theme: 'light' }
+        user: { name: "John", age: 31 },
+        items: ["a", "b", "c"],
+        settings: { theme: "light" },
       });
     });
   });
 
-  describe('selectors', () => {
-    it('should work with selectors', () => {
-      const useStore = createStore({ count: 5, name: 'test' });
-      const { result } = renderHook(() => useStore(state => state.count));
+  describe("selectors", () => {
+    it("should work with selectors", () => {
+      const useStore = createStore({ count: 5, name: "test" });
+      const { result } = renderHook(() => useStore((state) => state.count));
 
       expect(result.current).toBe(5);
     });
 
-    it('should only re-render when selected value changes', () => {
-      const useStore = createStore({ count: 0, name: 'test' });
+    it("should only re-render when selected value changes", () => {
+      const useStore = createStore({ count: 0, name: "test" });
       let renderCount = 0;
 
       const { result } = renderHook(() => {
         renderCount++;
-        return useStore(state => state.count);
+        return useStore((state) => state.count);
       });
 
       expect(renderCount).toBe(1);
@@ -116,7 +116,7 @@ describe('React Foam', () => {
 
       // Update name (should not trigger re-render for count selector)
       act(() => {
-        useStore.setState(state => ({ ...state, name: 'updated' }));
+        useStore.setState((state) => ({ ...state, name: "updated" }));
       });
 
       expect(renderCount).toBe(1); // No re-render
@@ -124,7 +124,7 @@ describe('React Foam', () => {
 
       // Update count (should trigger re-render)
       act(() => {
-        useStore.setState(state => ({ ...state, count: 1 }));
+        useStore.setState((state) => ({ ...state, count: 1 }));
       });
 
       expect(renderCount).toBe(2); // Re-render occurred
@@ -154,8 +154,8 @@ describe('React Foam', () => {
     // });
   });
 
-  describe('multiple stores', () => {
-    it('should handle multiple independent stores', () => {
+  describe("multiple stores", () => {
+    it("should handle multiple independent stores", () => {
       const useStore1 = createStore({ value: 1 });
       const useStore2 = createStore({ value: 2 });
 
@@ -173,8 +173,8 @@ describe('React Foam', () => {
       expect(result2.current.value).toBe(2); // Unchanged
     });
 
-    it('should allow cross-store interactions', () => {
-      const useUserStore = createStore({ name: '', isLoggedIn: false });
+    it("should allow cross-store interactions", () => {
+      const useUserStore = createStore({ name: "", isLoggedIn: false });
       const useCartStore = createStore({ items: [] as string[] });
 
       const performCheckout = () => {
@@ -182,11 +182,11 @@ describe('React Foam', () => {
         const cart = useCartStore.getState();
 
         if (!user.isLoggedIn) {
-          throw new Error('User must be logged in');
+          throw new Error("User must be logged in");
         }
 
         if (cart.items.length === 0) {
-          throw new Error('Cart is empty');
+          throw new Error("Cart is empty");
         }
 
         // Simulate checkout
@@ -195,8 +195,8 @@ describe('React Foam', () => {
 
       // Setup initial state
       act(() => {
-        useUserStore.setState({ name: 'John', isLoggedIn: true });
-        useCartStore.setState({ items: ['item1', 'item2'] });
+        useUserStore.setState({ name: "John", isLoggedIn: true });
+        useCartStore.setState({ items: ["item1", "item2"] });
       });
 
       expect(() => performCheckout()).not.toThrow();
@@ -204,8 +204,8 @@ describe('React Foam', () => {
     });
   });
 
-  describe('computed values', () => {
-    it('should create computed values', () => {
+  describe("computed values", () => {
+    it("should create computed values", () => {
       const useStore = createStore({ items: [1, 2, 3, 4, 5] });
       const getSum = computed(useStore, (state) =>
         state.items.reduce((sum, item) => sum + item, 0)
@@ -220,26 +220,26 @@ describe('React Foam', () => {
       expect(getSum()).toBe(6);
     });
 
-    it('should work with complex computed values', () => {
+    it("should work with complex computed values", () => {
       interface TodoState {
         todos: { id: number; text: string; completed: boolean }[];
-        filter: 'all' | 'active' | 'completed';
+        filter: "all" | "active" | "completed";
       }
 
       const useStore = createStore<TodoState>({
         todos: [
-          { id: 1, text: 'Task 1', completed: false },
-          { id: 2, text: 'Task 2', completed: true },
-          { id: 3, text: 'Task 3', completed: false },
+          { id: 1, text: "Task 1", completed: false },
+          { id: 2, text: "Task 2", completed: true },
+          { id: 3, text: "Task 3", completed: false },
         ],
-        filter: 'all',
+        filter: "all",
       });
 
       const getFilteredTodos = computed(useStore, (state) => {
         switch (state.filter) {
-          case 'active':
+          case "active":
             return state.todos.filter((todo) => !todo.completed);
-          case 'completed':
+          case "completed":
             return state.todos.filter((todo) => todo.completed);
           default:
             return state.todos;
@@ -249,36 +249,36 @@ describe('React Foam', () => {
       expect(getFilteredTodos()).toHaveLength(3);
 
       act(() => {
-        useStore.setState((state) => ({ ...state, filter: 'active' }));
+        useStore.setState((state) => ({ ...state, filter: "active" }));
       });
 
       expect(getFilteredTodos()).toHaveLength(2);
 
       act(() => {
-        useStore.setState((state) => ({ ...state, filter: 'completed' }));
+        useStore.setState((state) => ({ ...state, filter: "completed" }));
       });
 
       expect(getFilteredTodos()).toHaveLength(1);
     });
   });
 
-  describe('error handling', () => {
-    it('should handle errors in state updates gracefully', () => {
+  describe("error handling", () => {
+    it("should handle errors in state updates gracefully", () => {
       const useStore = createStore({ count: 0 });
 
       expect(() => {
         act(() => {
           useStore.setState(() => {
-            throw new Error('Update error');
+            throw new Error("Update error");
           });
         });
-      }).toThrow('Update error');
+      }).toThrow("Update error");
 
       // State should remain unchanged
       expect(useStore.getState()).toEqual({ count: 0 });
     });
 
-    it('should handle errors in selectors gracefully', () => {
+    it("should handle errors in selectors gracefully", () => {
       type StoreState = { value: { nonExistent: string } | null };
       const useStore = createStore<StoreState>({ value: null });
 
@@ -288,8 +288,8 @@ describe('React Foam', () => {
     });
   });
 
-  describe('TypeScript support', () => {
-    it('should provide proper type inference', () => {
+  describe("TypeScript support", () => {
+    it("should provide proper type inference", () => {
       interface State {
         count: number;
         name: string;
@@ -298,24 +298,24 @@ describe('React Foam', () => {
 
       const useStore = createStore<State>({
         count: 0,
-        name: 'test',
-        items: []
+        name: "test",
+        items: [],
       });
 
       // These should compile without type errors
       const state = useStore.getState();
-      expect(typeof state.count).toBe('number');
-      expect(typeof state.name).toBe('string');
+      expect(typeof state.count).toBe("number");
+      expect(typeof state.name).toBe("string");
       expect(Array.isArray(state.items)).toBe(true);
 
       // Selector should infer correct return type
-      const { result } = renderHook(() => useStore(state => state.count));
-      expect(typeof result.current).toBe('number');
+      const { result } = renderHook(() => useStore((state) => state.count));
+      expect(typeof result.current).toBe("number");
     });
   });
 
-  describe('memory management', () => {
-    it('should clean up listeners on unmount', () => {
+  describe("memory management", () => {
+    it("should clean up listeners on unmount", () => {
       const useStore = createStore({ count: 0 });
       const { unmount } = renderHook(() => useStore());
 
@@ -416,8 +416,8 @@ describe("advanced selectors and memo", () => {
 
   it("should prevent re-renders when using memo() and unrelated state changes", () => {
     interface State {
-      count: number,
-      unrelated: string,
+      count: number;
+      unrelated: string;
     }
 
     const useStore = createStore<State>({
