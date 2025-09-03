@@ -9,7 +9,10 @@ export default [
     ignores: [
       '**/node_modules/',
       'dist/',            
-      'build/',           
+      'build/',
+      'docs/',           
+      '.github/',    
+      'package-lock.json',
     ],
   },
 
