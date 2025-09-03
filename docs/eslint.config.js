@@ -118,6 +118,7 @@ const config = [
       'next-env.d.ts',
       'next.config.ts',
       'yarn.lock',
+      'out',
     ],
   },
 ];
